@@ -7,7 +7,7 @@ The personal profile and project index at **https://chtholly-boss.github.io/**.
 - **Introduction:** loaded from [`Chtholly-Boss/Chtholly-Boss/README.md`](https://github.com/Chtholly-Boss/Chtholly-Boss#readme). Edit that README to update the introduction on GitHub and this site. The browser fetches its current Markdown, sanitizes the rendered HTML, and resolves relative links against the profile repository. A bundled snapshot and static HTML keep the introduction readable when JavaScript or GitHub is unavailable.
 - **Projects:** Bit-IKET's public site, the tutorials repository, and NVIDIA SASS notes. The private Bit-IKET repository is not linked.
 - **Favorites:** interests from the profile README and a selection of public GitHub stars.
-- **Profiles:** GitHub and the profile README. Update the cards in `index.html` as more links are added.
+- **Profiles:** GitHub, Zhihu, and the profile README. Update the cards in `index.html` as more links are added.
 
 The tutorial project is a separate repository at https://github.com/Chtholly-Boss/tutorials. This homepage does not publish or change its Pages configuration.
 

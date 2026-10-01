@@ -152,7 +152,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: roun
 .shelf-icon.green { background: #e5eada; color: #788858; }
 
 .profiles-section { padding-bottom: 58px; }
-.profile-links { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.profile-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .profile-link { display: flex; align-items: center; gap: 16px; border: 1px solid var(--line); border-radius: 12px; padding: 25px; transition: border-color .2s; }
 .profile-link:hover { border-color: #9aa994; }
 .profile-link-icon { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: #e8ede4; color: #58634f; }
@@ -161,6 +161,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: roun
 .profile-link p { font-size: 10px; line-height: 1.5; color: #5e6855; }
 .profile-link > .icon { width: 17px; height: 17px; margin-left: auto; color: #848e7d; }
 .readme-icon { font-family: var(--serif); font-size: 19px; background: #e9e6dc; color: #61583f; }
+.zhihu-icon { font-size: 21px; font-weight: 600; background: #e5edfb; color: #175ac0; }
 .say-hello { display: flex; justify-content: space-between; align-items: center; gap: 25px; padding: 40px 1px 0; }
 .say-hello p { font-family: var(--serif); font-size: 19px; line-height: 1.6; color: #626d5b; letter-spacing: -.25px; }
 .say-hello p > span { font-family: 'DM Sans', sans-serif; color: #657059; font-size: 11px; letter-spacing: 0; }
