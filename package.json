@@ -10,7 +10,7 @@
     "prebuild": "npm run blogs:refresh",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "check": "node --test scripts/blog-metadata.test.mjs && node scripts/check-site.mjs"
+    "check": "node --test scripts/blog-metadata.test.mjs scripts/render-blogs.test.mjs && node scripts/check-site.mjs"
   },
   "dependencies": {
     "dompurify": "3.4.16",

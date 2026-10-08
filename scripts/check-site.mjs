@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { preview } from 'vite';
+import { HOMEPAGE_BLOG_LIMIT } from './render-blogs.mjs';
 
 await fs.mkdir('.preview', { recursive: true });
 const server = await preview({ preview: { host: '127.0.0.1', port: 4173, strictPort: true } });
@@ -37,9 +38,12 @@ try {
     const url = new URL(link);
     return `${url.origin}${url.pathname.replace(/\/$/, '')}`;
   }))].sort();
-  assert.deepEqual(await page.locator('.blog-card').evaluateAll((links) => links.map((link) => link.href).sort()), blogLinks);
+  const cachedPosts = JSON.parse(await fs.readFile('src/blog-posts.json', 'utf8'));
+  const recentLinks = cachedPosts.toSorted((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt))
+    .slice(0, HOMEPAGE_BLOG_LIMIT).map((post) => post.url);
+  assert.deepEqual(await page.locator('.blog-card').evaluateAll((links) => links.map((link) => link.href)), recentLinks);
   const publicationDates = await page.locator('.blog-card time').evaluateAll((dates) => dates.map((date) => Date.parse(date.dateTime)));
-  assert.equal(publicationDates.length, blogLinks.length);
+  assert.equal(publicationDates.length, Math.min(HOMEPAGE_BLOG_LIMIT, blogLinks.length));
   assert.ok(publicationDates.every((date, index) => Number.isFinite(date) && (index === 0 || publicationDates[index - 1] >= date)));
   console.log('PASS: blog posts show their original publication dates in newest-first order.');
   await page.locator('#copy-link').click();
@@ -71,6 +75,28 @@ try {
   assert.ok(references.includes('https://chtholly-boss.github.io/binet/'));
   assert.ok(!references.includes('https://chtholly-boss.github.io/bitiket/'));
 
+  await page.locator('.blog-more').click();
+  assert.equal(new URL(page.url()).pathname, '/blogs/');
+  assert.equal(await page.locator('h1').innerText(), 'Blog archive.');
+  await page.reload({ waitUntil: 'networkidle' });
+  assert.deepEqual(await page.locator('.blog-card').evaluateAll((links) => links.map((link) => link.href).sort()), blogLinks);
+  const archiveDates = await page.locator('.blog-card time').evaluateAll((dates) => dates.map((date) => Date.parse(date.dateTime)));
+  assert.ok(archiveDates.every((date, index) => Number.isFinite(date) && (index === 0 || archiveDates[index - 1] >= date)));
+  for (const width of [320, 375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Archive overflow at ${width}px`);
+  }
+  await page.screenshot({ path: '.preview/archive-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: '.preview/archive-mobile.png', fullPage: true });
+  const archiveAccessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+  assert.deepEqual(archiveAccessibility.violations.map(({ id, nodes }) => ({ id, nodes: nodes.map(({ target }) => target) })), []);
+  assert.deepEqual(errors, []);
+  await page.getByRole('link', { name: '← Back to home' }).click();
+  await page.waitForLoadState('networkidle');
+  assert.equal(new URL(page.url()).hash, '#blogs');
+  console.log('PASS: More opens the complete archive; direct navigation, responsive layouts, accessibility, and the return link work.');
+
   await context.route('https://example.invalid/**', (route) => route.abort());
   await context.route(rawReadme, (route) => route.fulfill({ contentType: 'text/plain', body: '## Updated introduction\n\nNew words from the source. [Notes](notes.md)\n\n<script>window.unsafe = true</script><img src="https://example.invalid/avatar.png" onerror="window.unsafe = true">' }));
   await page.reload({ waitUntil: 'networkidle' });
@@ -90,15 +116,18 @@ try {
   assert.match(await page.locator('#profile-readme').innerText(), /I'm Chtholly Boss/);
   console.log('PASS: API fallback and offline README snapshot remain readable.');
 
-  const noJavaScript = await browser.newContext({ javaScriptEnabled: false });
+  const noJavaScript = await browser.newContext({ javaScriptEnabled: false, reducedMotion: 'reduce' });
   const staticPage = await noJavaScript.newPage();
   await staticPage.goto(origin);
   assert.match(await staticPage.locator('#profile-readme').innerText(), /I'm Chtholly Boss/);
-  assert.deepEqual(await staticPage.locator('.blog-card').evaluateAll((links) => links.map((link) => link.href).sort()), blogLinks);
+  assert.deepEqual(await staticPage.locator('.blog-card').evaluateAll((links) => links.map((link) => link.href)), recentLinks);
   await staticPage.locator('.directory a[href="#projects"]').click();
   assert.equal(new URL(staticPage.url()).hash, '#projects');
+  await staticPage.locator('.blog-more').click();
+  assert.equal(new URL(staticPage.url()).pathname, '/blogs/');
+  assert.deepEqual(await staticPage.locator('.blog-card').evaluateAll((links) => links.map((link) => link.href).sort()), blogLinks);
   await noJavaScript.close();
-  console.log('PASS: introduction, blog posts, and navigation work without JavaScript.');
+  console.log('PASS: introduction, recent blog posts, archive, and navigation work without JavaScript.');
 } finally {
   await context?.close();
   await browser.close();
