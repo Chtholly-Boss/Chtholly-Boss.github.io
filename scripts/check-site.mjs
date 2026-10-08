@@ -56,8 +56,8 @@ try {
     const url = new URL(href);
     if (url.origin === origin && url.hash) assert.equal(await page.locator(`[id="${url.hash.slice(1)}"]`).count(), 1);
   }
-  assert.ok(references.includes('https://chtholly-boss.github.io/bitiket/'));
-  assert.ok(!references.includes('https://github.com/Chtholly-Boss/bitiket'));
+  assert.ok(references.includes('https://chtholly-boss.github.io/binet/'));
+  assert.ok(!references.includes('https://chtholly-boss.github.io/bitiket/'));
 
   await context.route('https://example.invalid/**', (route) => route.abort());
   await context.route(rawReadme, (route) => route.fulfill({ contentType: 'text/plain', body: '## Updated introduction\n\nNew words from the source. [Notes](notes.md)\n\n<script>window.unsafe = true</script><img src="https://example.invalid/avatar.png" onerror="window.unsafe = true">' }));

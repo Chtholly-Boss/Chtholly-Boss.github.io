@@ -33,5 +33,5 @@ GitHub Pages uses **GitHub Actions** as its source. Pushing to `main` builds wit
 ## Assets
 
 - Avatar: the public Chtholly-Boss GitHub avatar.
-- Bit-IKET preview: a screenshot of https://chtholly-boss.github.io/bitiket/.
+- binet preview: a frame of the film at https://chtholly-boss.github.io/binet/ (the swimlane scene), captured with Playwright at 1120×600.
 - DM Sans and Lora: locally hosted font files under the SIL Open Font License; licenses are included in `public/assets/fonts/`.
