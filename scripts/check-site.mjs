@@ -27,23 +27,35 @@ try {
   assert.equal(await page.getAttribute('html', 'data-profile-source'), 'github');
   assert.match(await page.locator('#profile-readme').innerText(), /I'm Chtholly Boss/);
 
-  for (const id of ['projects', 'favorites', 'profiles']) {
+  for (const id of ['projects', 'blogs', 'favorites', 'profiles']) {
     await page.locator(`.directory a[href="#${id}"]`).click();
     assert.equal(new URL(page.url()).hash, `#${id}`);
     assert.ok(await page.locator(`#${id} h2`).isVisible());
   }
+  const configuredBlogLinks = JSON.parse(await fs.readFile('src/blog-links.json', 'utf8'));
+  const blogLinks = [...new Set(configuredBlogLinks.map((link) => {
+    const url = new URL(link);
+    return `${url.origin}${url.pathname.replace(/\/$/, '')}`;
+  }))].sort();
+  assert.deepEqual(await page.locator('.blog-card').evaluateAll((links) => links.map((link) => link.href).sort()), blogLinks);
+  const publicationDates = await page.locator('.blog-card time').evaluateAll((dates) => dates.map((date) => Date.parse(date.dateTime)));
+  assert.equal(publicationDates.length, blogLinks.length);
+  assert.ok(publicationDates.every((date, index) => Number.isFinite(date) && (index === 0 || publicationDates[index - 1] >= date)));
+  console.log('PASS: blog posts show their original publication dates in newest-first order.');
   await page.locator('#copy-link').click();
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'https://chtholly-boss.github.io/');
   assert.match(await page.locator('#copy-status').innerText(), /copied/);
 
   await page.goto(origin, { waitUntil: 'networkidle' });
   await page.screenshot({ path: '.preview/home-desktop.png', fullPage: true });
+  await page.locator('#blogs').screenshot({ path: '.preview/blogs-desktop.png' });
   for (const width of [320, 375, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Horizontal overflow at ${width}px`);
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: '.preview/home-mobile.png', fullPage: true });
+  await page.locator('#blogs').screenshot({ path: '.preview/blogs-mobile.png' });
   assert.deepEqual(await page.locator('img').evaluateAll((images) => images.filter((image) => !image.complete || image.naturalWidth === 0).map((image) => image.src)), []);
   assert.deepEqual(errors, []);
   console.log('PASS: desktop/mobile layouts, section cards, clipboard, images, and no JavaScript errors.');
@@ -82,10 +94,11 @@ try {
   const staticPage = await noJavaScript.newPage();
   await staticPage.goto(origin);
   assert.match(await staticPage.locator('#profile-readme').innerText(), /I'm Chtholly Boss/);
+  assert.deepEqual(await staticPage.locator('.blog-card').evaluateAll((links) => links.map((link) => link.href).sort()), blogLinks);
   await staticPage.locator('.directory a[href="#projects"]').click();
   assert.equal(new URL(staticPage.url()).hash, '#projects');
   await noJavaScript.close();
-  console.log('PASS: introduction and navigation work without JavaScript.');
+  console.log('PASS: introduction, blog posts, and navigation work without JavaScript.');
 } finally {
   await context?.close();
   await browser.close();

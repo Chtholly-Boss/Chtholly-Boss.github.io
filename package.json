@@ -4,10 +4,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "blogs:refresh": "node scripts/sync-blog-posts.mjs",
+    "predev": "npm run blogs:refresh",
     "dev": "vite --host 127.0.0.1",
+    "prebuild": "npm run blogs:refresh",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "check": "node scripts/check-site.mjs"
+    "check": "node --test scripts/blog-metadata.test.mjs && node scripts/check-site.mjs"
   },
   "dependencies": {
     "dompurify": "3.4.16",
